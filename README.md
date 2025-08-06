@@ -1,169 +1,197 @@
-# MSSQL Database MCP  Server
+# Guía de Autenticación - MCP SQL Server
 
-<div align="center">
-  <img src="./src/img/logo.png" alt="MSSQL Database MCP server logo" width="400"/>
-</div>
+## Resumen
 
-## What is this? 🤔
+Este servidor MCP para SQL Server ahora soporta dos métodos de autenticación:
 
-This is a server that lets your LLMs (like Claude) talk directly to your MSSQL Database data! Think of it as a friendly translator that sits between your AI assistant and your database, making sure they can chat securely and efficiently.
+1. **Autenticación de SQL Server** (Tradicional)
+2. **Autenticación de Windows** (Credenciales integradas)
 
-### Quick Example
-```text
-You: "Show me all customers from New York"
-Claude: *queries your MSSQL Database database and gives you the answer in plain English*
+## Configuración de Variables de Entorno
+
+### Autenticación de SQL Server (Por defecto)
+
+```env
+# Configuración básica
+SERVER_NAME=localhost
+DATABASE_NAME=mi_base_datos
+USE_WINDOWS_AUTH=false
+
+# Credenciales de SQL Server
+USERNAME=mi_usuario_sql
+PASSWORD=mi_contraseña_sql
+
+# Opciones adicionales
+TRUST_SERVER_CERTIFICATE=true
+CONNECTION_TIMEOUT=30
+ENCRYPT=false
+READONLY=false
 ```
 
-## How Does It Work? 🛠️
+### Autenticación de Windows
 
-This server leverages the Model Context Protocol (MCP), a versatile framework that acts as a universal translator between AI models and databases. It supports multiple AI assistants including Claude Desktop and VS Code Agent.
+```env
+# Configuración básica
+SERVER_NAME=localhost
+DATABASE_NAME=mi_base_datos
+USE_WINDOWS_AUTH=true
 
-### What Can It Do? 📊
+# Opciones para credenciales de Windows
+DOMAIN=MI_DOMINIO          # Opcional: dominio (vacío para máquina local)
+USERNAME=mi_usuario_windows # Opcional: usuario específico (vacío para usuario actual)
+PASSWORD=mi_contraseña_win  # Opcional: contraseña (vacío para usuario actual)
 
-- Run MSSQL Database queries by just asking questions in plain English
-- Create, read, update, and delete data
-- Manage database schema (tables, indexes)
-- Secure connection handling
-- Real-time data interaction
+# Opciones adicionales
+TRUST_SERVER_CERTIFICATE=true
+CONNECTION_TIMEOUT=30
+ENCRYPT=false
+READONLY=false
+```
 
-## Quick Start 🚀
+## Ejemplos de Configuración
 
-### Prerequisites
-- Node.js 14 or higher
-- Claude Desktop or VS Code with Agent extension
+### Ejemplo 1: SQL Server Authentication (Desarrollo local)
 
-### Set up project
-
-1. **Install Dependencies**  
-   Run the following command in the root folder to install all necessary dependencies:  
-   ```bash
-   npm install
-   ```
-
-2. **Build the Project**  
-   Compile the project by running:  
-   ```bash
-   npm run build
-   ```
-
-## Configuration Setup
-
-### Option 1: VS Code Agent Setup
-
-1. **Install VS Code Agent Extension**
-   - Open VS Code
-   - Go to Extensions (Ctrl+Shift+X)
-   - Search for "Agent" and install the official Agent extension
-
-2. **Create MCP Configuration File**
-   - Create a `.vscode/mcp.json` file in your workspace
-   - Add the following configuration:
-
-   ```json
-   {
-     "servers": {
-       "mssql-nodejs": {
-          "type": "stdio",
-          "command": "node",
-          "args": ["q:\\Repos\\SQL-AI-samples\\MssqlMcp\\Node\\dist\\index.js"],
-          "env": {
-            "SERVER_NAME": "your-server-name.database.windows.net",
-            "DATABASE_NAME": "your-database-name",
-            "READONLY": "false"
-          }
-        }
+```json
+{
+  "mcpServers": {
+    "mssql-local": {
+      "command": "node",
+      "args": ["C:/ruta/a/tu/proyecto/dist/index.js"],
+      "env": {
+        "SERVER_NAME": "localhost",
+        "DATABASE_NAME": "TestDB",
+        "USE_WINDOWS_AUTH": "false",
+        "USERNAME": "sa",
+        "PASSWORD": "MiContraseña123!",
+        "TRUST_SERVER_CERTIFICATE": "true",
+        "READONLY": "false"
       }
-   }
-   ```
-
-3. **Alternative: User Settings Configuration**
-   - Open VS Code Settings (Ctrl+,)
-   - Search for "mcp"
-   - Click "Edit in settings.json"
-   - Add the following configuration:
-
-  ```json
-   {
-    "mcp": {
-        "servers": {
-            "mssql": {
-                "command": "node",
-                "args": ["C:/path/to/your/Node/dist/index.js"],
-                "env": {
-                "SERVER_NAME": "your-server-name.database.windows.net",
-                "DATABASE_NAME": "your-database-name",
-                "READONLY": "false"
-                }
-            }
-        }
     }
   }
-  ```
+}
+```
 
-4. **Restart VS Code**
-   - Close and reopen VS Code for the changes to take effect
+### Ejemplo 2: Windows Authentication (Usuario actual)
 
-5. **Verify MCP Server**
-   - Open Command Palette (Ctrl+Shift+P)
-   - Run "MCP: List Servers" to verify your server is configured
-   - You should see "mssql" in the list of available servers
+```json
+{
+  "mcpServers": {
+    "mssql-windows": {
+      "command": "node",
+      "args": ["C:/ruta/a/tu/proyecto/dist/index.js"],
+      "env": {
+        "SERVER_NAME": "SERVIDOR-EMPRESA",
+        "DATABASE_NAME": "ProductionDB",
+        "USE_WINDOWS_AUTH": "true",
+        "TRUST_SERVER_CERTIFICATE": "true",
+        "READONLY": "true"
+      }
+    }
+  }
+}
+```
 
-### Option 2: Claude Desktop Setup
+### Ejemplo 3: Windows Authentication (Usuario específico)
 
-1. **Open Claude Desktop Settings**
-   - Navigate to File → Settings → Developer → Edit Config
-   - Open the `claude_desktop_config` file
+```json
+{
+  "mcpServers": {
+    "mssql-domain": {
+      "command": "node",
+      "args": ["C:/ruta/a/tu/proyecto/dist/index.js"],
+      "env": {
+        "SERVER_NAME": "sql-server.empresa.com",
+        "DATABASE_NAME": "EmpresaDB",
+        "USE_WINDOWS_AUTH": "true",
+        "DOMAIN": "EMPRESA",
+        "USERNAME": "juan.perez",
+        "PASSWORD": "ContraseñaDominio123!",
+        "ENCRYPT": "true",
+        "READONLY": "false"
+      }
+    }
+  }
+}
+```
 
-2. **Add MCP Server Configuration**
-   Replace the content with the configuration below, updating the path and credentials:
+## Casos de Uso Comunes
 
-   ```json
-   {
-     "mcpServers": {
-       "mssql": {
-         "command": "node",
-         "args": ["C:/path/to/your/Node/dist/index.js"],
-         "env": {
-           "SERVER_NAME": "your-server-name.database.windows.net",
-           "DATABASE_NAME": "your-database-name",
-           "READONLY": "false"
-         }
-       }
-     }
-   }
-   ```
+### 1. Desarrollo Local con SQL Server Express
 
-3. **Restart Claude Desktop**
-   - Close and reopen Claude Desktop for the changes to take effect
+```env
+SERVER_NAME=localhost\SQLEXPRESS
+DATABASE_NAME=MiAppDB
+USE_WINDOWS_AUTH=true
+TRUST_SERVER_CERTIFICATE=true
+READONLY=false
+```
 
-### Configuration Parameters
+### 2. Servidor de Producción con Dominio
 
-- **SERVER_NAME**: Your MSSQL Database server name (e.g., `my-server.database.windows.net`)
-- **DATABASE_NAME**: Your database name
-- **READONLY**: Set to `"true"` to restrict to read-only operations, `"false"` for full access
-- **Path**: Update the path in `args` to point to your actual project location.
-- **CONNECTION_TIMEOUT**: (Optional) Connection timeout in seconds. Defaults to `30` if not set.
-- **TRUST_SERVER_CERTIFICATE**: (Optional) Set to `"true"` to trust self-signed server certificates (useful for development or when connecting to servers with self-signed certs). Defaults to `"false"`.
+```env
+SERVER_NAME=sqlprod.empresa.local
+DATABASE_NAME=ProdDB
+USE_WINDOWS_AUTH=true
+DOMAIN=EMPRESA
+USERNAME=svc_aplicacion
+PASSWORD=contraseña_servicio
+ENCRYPT=true
+READONLY=true
+```
 
-## Sample Configurations
+### 3. Servidor Remoto con Autenticación SQL
 
-You can find sample configuration files in the `src/samples/` folder:
-- `claude_desktop_config.json` - For Claude Desktop
-- `vscode_agent_config.json` - For VS Code Agent
+```env
+SERVER_NAME=192.168.1.100,1433
+DATABASE_NAME=RemoteDB
+USE_WINDOWS_AUTH=false
+USERNAME=app_user
+PASSWORD=app_password123
+TRUST_SERVER_CERTIFICATE=false
+ENCRYPT=true
+READONLY=false
+```
 
-## Usage Examples
+## Solución de Problemas
 
-Once configured, you can interact with your database using natural language:
+### Error de Autenticación de Windows
 
-- "Show me all users from New York"
-- "Create a new table called products with columns for id, name, and price"
-- "Update all pending orders to completed status"
-- "List all tables in the database"
+Si tienes problemas con la autenticación de Windows:
 
-## Security Notes
+1. Verifica que el usuario tenga permisos en SQL Server
+2. Asegúrate de que el servidor SQL Server esté configurado para autenticación mixta
+3. Comprueba que el dominio sea correcto (usa `echo %USERDOMAIN%` en cmd)
 
-- The server requires a WHERE clause for read operations to prevent accidental full table scans
-- Update operations require explicit WHERE clauses for security
-- Set `READONLY: "true"` in production environments if you only need read access
+### Error de Conexión
 
-You should now have successfully configured the MCP server for MSSQL Database with your preferred AI assistant. This setup allows you to seamlessly interact with MSSQL Database through natural language queries!
+```env
+# Aumenta el timeout si tienes conexiones lentas
+CONNECTION_TIMEOUT=60
+
+# Habilita certificados auto-firmados para servidores locales
+TRUST_SERVER_CERTIFICATE=true
+
+# Verifica la configuración de encriptación
+ENCRYPT=false
+```
+
+### Verificar Configuración
+
+Para verificar qué usuario está conectándose, puedes ejecutar esta consulta una vez conectado:
+
+```sql
+SELECT 
+    SYSTEM_USER as 'Login Name',
+    USER_NAME() as 'User Name',
+    @@SERVERNAME as 'Server Name',
+    DB_NAME() as 'Database Name'
+```
+
+## Notas de Seguridad
+
+1. **Credenciales**: Nunca expongas credenciales en código fuente
+2. **Solo lectura**: Usa `READONLY=true` en entornos de producción cuando sea posible
+3. **Encriptación**: Habilita `ENCRYPT=true` para conexiones remotas
+4. **Permisos mínimos**: Otorga solo los permisos necesarios al usuario de base de datos
+5. **Variables de entorno**: Usa archivos `.env` para credenciales locales (no los subas a git)

@@ -1,0 +1,16 @@
+{
+    "mcpServers": {
+      "mssql-desarrollo": {
+        "command": "node",
+        "args": [ "c:\\Users\\smendoza\\Desktop\\MCP_SERVERS\\MCP-SQl-SERVER\\dist\\index.js" ],
+        "env": {
+          "SERVER_NAME": "130.1.120.82",
+          "DATABASE_NAME": "DESARROLLO",
+          "USE_WINDOWS_AUTH": "true",
+          "TRUST_SERVER_CERTIFICATE": "true",
+          "CONNECTION_TIMEOUT": "30",
+          "READONLY": "false"
+        }
+      }
+    }
+  }

@@ -1,0 +1,20 @@
+{
+    "mcp": {
+        "servers": {
+            "mssql-windows-auth": {
+                "type": "stdio",
+                "command": "node",
+                "args": ["q:\\Repos\\SQL-AI-samples\\MssqlMcp\\Node\\dist\\index.js"],
+                "env": {
+                  "SERVER_NAME": "your-server-name",
+                  "DATABASE_NAME": "your-database-name",
+                  "USE_WINDOWS_AUTH": "true",
+                  "DOMAIN": "your_domain",
+                  "USERNAME": "your_windows_user",
+                  "PASSWORD": "your_windows_password",
+                  "READONLY": "false"
+                }
+            }
+        }
+    }
+}
