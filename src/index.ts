@@ -26,24 +26,48 @@ dotenv.config();
 // Globals
 let globalSqlPool: sql.ConnectionPool | null = null;
 
-// SQL config using username/password (no Azure)
+// SQL config supporting both SQL Server and Windows authentication
 export async function createSqlConfig(): Promise<{ config: sql.config }> {
   const trustServerCertificate = process.env.TRUST_SERVER_CERTIFICATE?.toLowerCase() === "true";
   const connectionTimeout = process.env.CONNECTION_TIMEOUT ? parseInt(process.env.CONNECTION_TIMEOUT, 10) : 30;
+  const useWindowsAuth = process.env.USE_WINDOWS_AUTH?.toLowerCase() === "true";
+  const encrypt = process.env.ENCRYPT?.toLowerCase() === "true" || false;
 
-  return {
-    config: {
-      server: process.env.SERVER_NAME!,
-      database: process.env.DATABASE_NAME!,
-      user: process.env.USERNAME!,
-      password: process.env.PASSWORD!,
-      options: {
-        encrypt: false,
-        trustServerCertificate,
-      },
-      connectionTimeout: connectionTimeout * 1000,
+  const baseConfig: sql.config = {
+    server: process.env.SERVER_NAME!,
+    database: process.env.DATABASE_NAME!,
+    options: {
+      encrypt,
+      trustServerCertificate,
     },
+    connectionTimeout: connectionTimeout * 1000,
   };
+
+  if (useWindowsAuth) {
+    // Windows Authentication (Integrated Security)
+    return {
+      config: {
+        ...baseConfig,
+        authentication: {
+          type: "ntlm",
+          options: {
+            domain: process.env.DOMAIN || "",
+            userName: process.env.USERNAME || "",
+            password: process.env.PASSWORD || "",
+          },
+        },
+      },
+    };
+  } else {
+    // SQL Server Authentication
+    return {
+      config: {
+        ...baseConfig,
+        user: process.env.USERNAME!,
+        password: process.env.PASSWORD!,
+      },
+    };
+  }
 }
 
 // Tools
@@ -123,12 +147,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
     }
 
+    // Ensure result is serializable
+    let responseText;
+    try {
+      responseText = JSON.stringify(result, null, 2);
+    } catch (jsonError) {
+      // If result can't be serialized, convert to string
+      responseText = String(result);
+    }
+
     return {
-      content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      content: [{ type: "text", text: responseText }],
     };
   } catch (error) {
+    // Better error handling
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
-      content: [{ type: "text", text: `Error occurred: ${error}` }],
+      content: [{ type: "text", text: `Error occurred: ${errorMessage}` }],
       isError: true,
     };
   }
@@ -154,8 +189,13 @@ runServer().catch((error) => {
 async function ensureSqlConnection() {
   if (globalSqlPool && globalSqlPool.connected) return;
 
-  const { config } = await createSqlConfig();
-  globalSqlPool = await sql.connect(config);
+  try {
+    const { config } = await createSqlConfig();
+    globalSqlPool = await sql.connect(config);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to connect to SQL Server: ${errorMessage}`);
+  }
 }
 
 function wrapToolRun(tool: { run: (...args: any[]) => Promise<any> }) {

@@ -4,8 +4,11 @@
         "command": "node",
         "args": [ "Q:/Repos/SQL-AI-samples/MssqlMcp/Node/dist/index.js" ],
         "env": {
-          "SERVER_NAME": "your-server-name.database.windows.net",
+          "SERVER_NAME": "your-server-name",
           "DATABASE_NAME": "your-database-name",
+          "USE_WINDOWS_AUTH": "false",
+          "USERNAME": "your_sql_username",
+          "PASSWORD": "your_sql_password",
           "READONLY": "false"
         }
       }
